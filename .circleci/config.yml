@@ -44,7 +44,7 @@ jobs:
           name: Build front-end
           command: |
             # Your code here
-            cd backend
+            cd frontend
             npm install
             npm run build
             exit 1
@@ -71,21 +71,49 @@ jobs:
           paths: [backend/node_modules]
           key: backend-build
 
-#   test-frontend:
-#     docker:
-#       # Docker image here
-#     steps:
-#       # Checkout code from git
-#       # Restore from cache
-#       # Your job code here
+  test-frontend:
+    docker:
+      - image: circleci/node:13.8.0
+      # Docker image here
+    steps:
+      # Checkout code from git
+      - checkout
+      # Restore from cache
+      - restore_cache:
+          keys: [frontend-test]
+      # Your job code here
+      - run:
+          name: Frontend test
+          command: |
+             # Your code here
+             cd frontend
+             npm install
+             npm run test
+      - save_cache:
+          paths: [frontend/node_modules]
+          key: frontend-test
                 
-#   test-backend:
-#     docker:
-#       # Docker image here
-#     steps:
-#       # Checkout code from git
-#       # Restore from cache
-#       # Your job code here
+  test-backend:
+    docker:
+      # Docker image here
+      - image: circleci/node:13.8.0
+    steps:
+      # Checkout code from git
+      - checkout
+      # Restore from cache
+      - restore_cache:
+          keys: [backend-test]
+      # Your job code here
+      - run:
+          name: backend test
+          command: |
+             # Your code here
+             cd backend
+             npm install
+             npm run test
+      - save_cache:
+          paths: [backend/node_modules]
+          key: backend-test
             
 #   scan-frontend:
 #     docker:
@@ -274,10 +302,10 @@ workflows:
     jobs:
       - build-frontend
       - build-backend
-      # - test-frontend:
-      #     requires: [build-frontend]
-      # - test-backend:
-      #     requires: [build-backend]
+      - test-frontend:
+          requires: [build-frontend]
+      - test-backend:
+          requires: [build-backend]
       # - scan-backend:
       #     requires: [build-backend]
       # - scan-frontend:
