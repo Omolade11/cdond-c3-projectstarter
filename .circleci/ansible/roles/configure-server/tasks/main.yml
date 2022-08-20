@@ -25,6 +25,6 @@
     production: yes
     state: present
 
-# - name: "sleep"
-#   become: true
-#   shell: sleep 120    
+- name: "sleep"
+  become: true
+  shell: sleep 120    
