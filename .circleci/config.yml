@@ -317,7 +317,7 @@ jobs:
                     
   deploy-backend:
     docker:
-    - image: python:3.7-alpine3.11
+      - image: python:3.7-alpine3.11
       # Docker image here that supports Ansible
     steps:
       # Add ssh keys with fingerprint
@@ -326,7 +326,7 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["ae:90:e1:eb:af:c1:8e:50:33:4a:6c:da:9a:47:5a:8e"]
       - attach_workspace:
-          at: ./
+          at: ~/
       - run:
           name: test
           command: |
