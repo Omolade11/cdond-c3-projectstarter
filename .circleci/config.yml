@@ -205,7 +205,7 @@ jobs:
           command: cat .circleci/ansible/inventory.txt
           
       - run: yum install -y -tar gzip
-      
+
       - persist_to_workspace:
           root: ~/
           paths:
@@ -213,27 +213,43 @@ jobs:
   #     # Here's where you will add some code to rollback on failure      
       - destroy-environment
 
-  # configure-infrastructure:
-  #   docker:
-  #     - image: amazon/aws-cli
-  #     # Docker image here that supports Ansible
-  #   steps:
-  #     # Checkout code from git
-  #     - checkout
-  #     # Add ssh keys with fingerprint
+  configure-infrastructure:
+    docker:
+      - image: python:3.7-alpine3.11
+      # Docker image here that supports Ansible
+    steps:
+      # Checkout code from git
+      - checkout
+      # Add ssh keys with fingerprint
+      - add_ssh_keys:
+          fingerprint: [ae:90:e1:eb:af:c1:8e:50:33:4a:6c:da:9a:47:5a:8e]
 
-  #     # attach workspace
-  #     - run:
-  #         name: Install dependencies
-  #         command: |
-  #           # Your code here
-  #           exit 1
-  #     - run:
-  #         name: Configure server
-  #         command: |
-  #           # Your code here
-  #           exit 1
-  #     # Here's where you will add some code to rollback on failure      
+      - attach workspace:
+          at: ./
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible
+            apk add openssh
+            apk add python3
+            apk add curl
+            apk add unzip
+      - run:
+          name: Configure server
+          command: |
+            # Your code here
+            cd .circleci/ansible
+            ansible-playbook -i inventory.txt configure-server.yml -vvv
+
+      - run:
+          name: Install AWS CLI v2
+          command: |
+            curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+            unzip awscli-bundle.zip
+            ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+          when: on_fail
+      # Here's where you will add some code to rollback on failure
+      - destroy-environment      
 
 #   run-migrations:
 #     docker:
@@ -366,8 +382,8 @@ workflows:
           filters:
             branches:
               only: [dev]
-      # - configure-infrastructure:
-      #     requires: [deploy-infrastructure]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
       # - run-migrations:
       #     requires: [configure-infrastructure]
       # - deploy-frontend:
