@@ -276,7 +276,7 @@ jobs:
     
   deploy-frontend:
     docker:
-      - image: amazon/aws-cli
+      - image: python:3.7-alpine3.11
       # Docker image here that supports AWS CLI
     steps:
       # Checkout code from git
