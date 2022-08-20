@@ -220,7 +220,7 @@ jobs:
     steps:
       - checkout
       - add_ssh_keys:
-          fingerprints: [ae:90:e1:eb:af:c1:8e:50:33:4a:6c:da:9a:47:5a:8e]
+          fingerprints: ["ae:90:e1:eb:af:c1:8e:50:33:4a:6c:da:9a:47:5a:8e"]
 
       - attach_workspace:
           at: ./
@@ -316,22 +316,42 @@ jobs:
             aws s3 rm s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       - destroy-environment      
                     
-#   deploy-backend:
-#     docker:
-#       # Docker image here that supports Ansible
-#     steps:
-#       # Checkout code from git
-#       # Add ssh keys with fingerprint
-#       # attach workspace
-#       - run:
-#           name: Install dependencies
-#           command: |
-#             # your code here
-#       - run:
-#           name: Deploy backend
-#           command: |
-#             # your code here
-#       # Here's where you will add some code to rollback on failure  
+  deploy-backend:
+    docker:
+    - image: python:3.7-alpine3.11
+      # Docker image here that supports Ansible
+    steps:
+      # Add ssh keys with fingerprint
+      # attach workspace
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["ae:90:e1:eb:af:c1:8e:50:33:4a:6c:da:9a:47:5a:8e"]
+      - attach_workspace:
+          at: ./
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible nodejs npm openssh tar gzip
+      - run:
+          name: Deploy backend
+          command: |
+            cd backend
+            npm i
+            npm run build
+            cd ..
+            tar -C backend -czvf artifact.tar.gz .
+            cd .circleci/ansible
+            echo "Contents  of the inventory.txt file is -------"
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-backend.yml -vvv
+      - run:
+          name: empty bucket udapeople-${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
+          command: |
+            aws s3 rm s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+      - destroy-environment
+      - revert-migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}    
 
 #   smoke-test:
 #     docker:
@@ -415,8 +435,8 @@ workflows:
           requires: [configure-infrastructure]
       - deploy-frontend:
           requires: [run-migrations]
-      # - deploy-backend:
-      #     requires: [run-migrations]
+      - deploy-backend:
+          requires: [run-migrations]
       # - smoke-test:
       #     requires: [deploy-backend, deploy-frontend]
       # - cloudfront-update:
