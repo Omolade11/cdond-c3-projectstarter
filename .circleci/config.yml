@@ -204,6 +204,8 @@ jobs:
           name: Show IP address
           command: cat .circleci/ansible/inventory.txt
           
+      - run: yum install -y -tar gzip
+      
       - persist_to_workspace:
           root: ~/
           paths:
