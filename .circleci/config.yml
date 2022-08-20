@@ -329,12 +329,20 @@ jobs:
       - attach_workspace:
           at: ./
       - run:
+          name: test
+          command: |
+            cd .circleci/ansible
+            echo "Contents  of the inventory.txt file is -------"
+            cat inventory.txt
+            cd ../..
+      - run:
           name: Install dependencies
           command: |
             apk add --update ansible nodejs npm openssh tar gzip
       - run:
           name: Deploy backend
           command: |
+            ls -al
             cd backend
             npm i
             npm run build
@@ -352,7 +360,7 @@ jobs:
       - destroy-environment
       - revert-migrations:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7} 
-             
+
   smoke-test:
     docker:
       # Docker image here that supports AWS CLI
